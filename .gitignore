@@ -1,0 +1,53 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+GEMINI.md
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Project specific data (processed and intermediate datasets)
+data/processed/*
+!data/processed/.gitkeep
+data/benchmark/*
+!data/benchmark/.gitkeep
+!data/benchmark/benchmark.json
+
+# Environment variables (API keys, etc.)
+.env
+.env.*
+
+# Streamlit config and cache
+.streamlit/
