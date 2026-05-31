@@ -19,10 +19,15 @@ RAW_LAW_PDF_PATH = RAW_DATA_DIR / "luat-lao-dong.pdf"
 CORPUS_JSONL_PATH = PROCESSED_DATA_DIR / "corpus.jsonl"
 BENCHMARK_JSON_PATH = BENCHMARK_DATA_DIR / "benchmark.json"
 
-# Cấu hình Vector Database và Embedding cục bộ
+# Cấu hình thư mục lưu trữ mô hình offline
+MODELS_DIR = PROJECT_ROOT / "models"
+OFFLINE_EMBEDDING_DIR = MODELS_DIR / "bge-m3"
+OFFLINE_RERANKER_DIR = MODELS_DIR / "bge-reranker-base"
+
+# Cấu hình tên mô hình hoặc đường dẫn tải cục bộ (Tự động fallback sang offline nếu thư mục tồn tại)
+EMBEDDING_MODEL_NAME = str(OFFLINE_EMBEDDING_DIR) if OFFLINE_EMBEDDING_DIR.exists() else "BAAI/bge-m3"
+RERANKER_MODEL_NAME = str(OFFLINE_RERANKER_DIR) if OFFLINE_RERANKER_DIR.exists() else "BAAI/bge-reranker-base"
 VECTOR_DB_DIR = PROCESSED_DATA_DIR / "faiss_index"
-EMBEDDING_MODEL_NAME = "BAAI/bge-m3"  # Thay đổi thành model mong muốn trong thực nghiệm
-RERANKER_MODEL_NAME = "BAAI/bge-reranker-base"
 
 # API Key và Cấu hình LLM
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")

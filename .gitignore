@@ -52,3 +52,14 @@ dada/raw/*
 
 # Streamlit config and cache
 .streamlit/
+
+# Model parameters / weights
+*.safetensors
+*.bin
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.gguf
+*.ggml
+*.h5
