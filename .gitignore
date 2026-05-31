@@ -44,6 +44,7 @@ data/processed/*
 data/benchmark/*
 !data/benchmark/.gitkeep
 !data/benchmark/benchmark.json
+dada/raw/*
 
 # Environment variables (API keys, etc.)
 .env
