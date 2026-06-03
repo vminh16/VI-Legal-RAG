@@ -63,11 +63,16 @@ class GeminiGenerator:
         # Khởi tạo Client của SDK Google GenAI mới nhất
         self.client = genai.Client(api_key=self.api_key)
 
-    def generate_answer(self, query: str, retrieved_chunks: list[dict]) -> RAGResponse:
+    def generate_answer(
+        self, 
+        query: str, 
+        retrieved_chunks: list[dict], 
+        context_text: str = None
+    ) -> RAGResponse:
         """
-        Nhận câu hỏi và ngữ cảnh truy hồi để sinh câu trả lời có cấu trúc trích dẫn:
-        1. Dựng khối Context từ retrieved_chunks.
-        2. Tạo prompt chỉ thị nghiêm ngặt hướng tới Phương án 2 (tập trung và chia gạch đầu dòng).
+        Nhận câu hỏi và ngữ cảnh dựng sẵn để sinh câu trả lời có cấu trúc trích dẫn:
+        1. Gọi ContextBuilder để dựng khối ngữ cảnh [Nguồn X] chuẩn nếu chưa có.
+        2. Tạo prompt chỉ thị nghiêm ngặt hướng tới Phương án 2.
         3. Gọi Gemini API với response_schema ràng buộc bằng Pydantic RAGResponse.
         """
         if not query:
@@ -85,20 +90,11 @@ class GeminiGenerator:
                 confidence=0.0
             )
 
-        # 1. Dựng khối văn bản ngữ cảnh (Context)
-        context_parts = []
-        for chunk in retrieved_chunks:
-            part = (
-                f"--- TÀI LIỆU NGUỒN ---\n"
-                f"Chunk ID: {chunk.get('chunk_id', 'N/A')}\n"
-                f"Điều luật: {chunk.get('article', 'N/A')}\n"
-                f"Khoản: {chunk.get('clause', 'N/A') if chunk.get('clause') else 'N/A'}\n"
-                f"Tiêu đề Điều: {chunk.get('title', 'N/A')}\n"
-                f"Đoạn văn bản gốc: {chunk.get('text', '')}\n"
-                f"Nguồn chính thống: {chunk.get('source_url', 'N/A')}\n"
-            )
-            context_parts.append(part)
-        context_text = "\n".join(context_parts)
+        # 1. Dựng khối văn bản ngữ cảnh (Context) chuẩn hóa nếu chưa có truyền vào từ ngoài
+        if not context_text:
+            from src.retrieval.context_builder import ContextBuilder
+            builder = ContextBuilder()
+            context_text, _ = builder.build_context(retrieved_chunks)
 
         # 2. Tạo prompt chỉ thị khắt khe hướng tới Phương án 2 và Tông giọng Trung lập, Giải thích dễ hiểu
         prompt = f"""Bạn là một Trợ lý Tư vấn Pháp lý Lao động Việt Nam cao cấp. Hãy trả lời câu hỏi sau đây dựa trên các tài liệu thuộc Ngữ cảnh pháp lý được cung cấp bên dưới.

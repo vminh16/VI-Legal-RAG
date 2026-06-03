@@ -1,0 +1,32 @@
+# =====================================================================
+# Tệp Cấu hình Tập trung: Dự án ViLaborRAG
+# =====================================================================
+
+# Các đường dẫn dữ liệu chính (tương đối so với thư mục gốc của dự án)
+paths:
+  raw_law_pdf: "data/raw/luat-lao-dong.pdf"
+  corpus_jsonl: "data/processed/corpus_structured.jsonl"
+  benchmark_json: "data/benchmark/benchmark.json"
+  vector_db_dir: "data/processed/faiss_index"
+  models_dir: "models"
+
+# Cấu hình tên các mô hình ngôn ngữ hoặc embedding mặc định
+models:
+  embedding: "BAAI/bge-m3"
+  reranker: "BAAI/bge-reranker-base"
+  llm: "gemini-2.5-flash"
+
+# Cấu hình tham số của bộ truy hồi (Retrieval) và các ngưỡng từ chối Tầng 2
+retrieval:
+  top_k: 5
+  rrf_k: 60
+  thresholds:
+    dense: 0.35           # Ngưỡng sàn Cosine Similarity đối với Dense search
+    bm25: 1.0            # Ngưỡng sàn đối với BM25 search
+    hybrid: 0.012         # Ngưỡng sàn gộp RRF đối với Hybrid search
+    hybrid_rerank: -2.0   # Ngưỡng sàn Logit đối với Cross-Encoder Reranker
+
+# Cấu hình tham số sinh văn bản (LLM Generation)
+generation:
+  temperature: 0.0
+  default_disclaimer: "Lưu ý: Ý kiến tư vấn trên chỉ mang tính chất tham khảo dựa trên quy định của Bộ luật Lao động 2019 và dữ liệu ngữ cảnh hiện có tại thời điểm tra cứu."
