@@ -2,7 +2,7 @@ from pathlib import Path
 from src.retrieval.bm25_retriever import BM25Retriever
 from src.retrieval.dense_retriever import DenseRetriever
 from src.retrieval.hybrid_retriever import HybridRetriever
-from src.retrieval.reranker import Reranker
+from src.reranking.reranker import Reranker
 
 class RetrievalPipeline:
     """
