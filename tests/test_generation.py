@@ -87,7 +87,11 @@ def test_generator_offline_mocking(sample_retrieved_chunks):
         assert response.citations[0].article == "Điều 24"
         assert response.confidence == 0.95
 
-@pytest.mark.skipif(not GEMINI_API_KEY, reason="Không tìm thấy GEMINI_API_KEY trong môi trường (.env) để chạy test online thực tế.")
+@pytest.mark.online
+@pytest.mark.skipif(
+    os.getenv("RUN_ONLINE_TESTS") != "1" or not GEMINI_API_KEY,
+    reason="Online Gemini test chỉ chạy khi RUN_ONLINE_TESTS=1 và có GEMINI_API_KEY."
+)
 def test_generator_online_actual(sample_retrieved_chunks):
     """Kiểm tra gọi API thực tế tới Gemini 2.5 Flash khi có API Key online."""
     if GeminiGenerator is None:

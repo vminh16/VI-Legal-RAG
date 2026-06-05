@@ -174,3 +174,46 @@ def test_pipeline_successful_flow():
     assert "Điều 24" in result["answer"]
     assert len(result["citations"]) == 1
     assert result["confidence"] == 0.95
+
+def test_pipeline_handles_empty_citations_without_crashing():
+    """Regression: Generator có thể trả citations rỗng; pipeline không được nổ IndexError."""
+    if RAGPipeline is None:
+        pytest.fail("Chưa lập trình lớp RAGPipeline!")
+
+    mock_detector = MagicMock()
+    mock_detector.detect_query_refusal.return_value.refuse = False
+    mock_detector.detect_retrieval_refusal.return_value = {"refuse": False}
+    mock_detector.detect_output_refusal.return_value = {"refuse": False}
+
+    mock_chunks = [{"chunk_id": "c1", "text": "Điều 24 quy định thử việc...", "score": 0.85}]
+    mock_retrieval = MagicMock()
+    mock_retrieval.retrieve.return_value = mock_chunks
+
+    mock_response = RAGResponse(
+        answer="Câu trả lời thiếu trích dẫn nhưng generator vẫn tự tin.",
+        citations=[],
+        confidence=0.90
+    )
+    mock_generator = MagicMock()
+    mock_generator.generate_answer.return_value = mock_response
+
+    mock_citation_checker = MagicMock()
+    mock_citation_checker.check_citations.return_value = {"is_valid": True, "errors": []}
+    mock_faithfulness_checker = MagicMock()
+    mock_faithfulness_checker.check_faithfulness.return_value = {"is_faithful": True, "conflicts": []}
+    mock_faithfulness_checker.check_disclaimer.return_value = {"has_disclaimer": True, "errors": []}
+
+    pipeline = RAGPipeline(
+        api_key="mock_key",
+        retrieval_pipeline=mock_retrieval,
+        generator=mock_generator,
+        citation_checker=mock_citation_checker,
+        faithfulness_checker=mock_faithfulness_checker,
+        refusal_detector=mock_detector
+    )
+
+    result = pipeline.answer_question("Thử việc là gì?", strategy="dense")
+
+    assert result["refused"] is False
+    assert result["citations"] == []
+    assert result["confidence"] == 0.90

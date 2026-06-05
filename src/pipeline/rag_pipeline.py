@@ -56,7 +56,8 @@ class RAGPipeline:
                 "citations": [],
                 "confidence": 0.0,
                 "refused": True,
-                "category": "empty_query"
+                "category": "empty_query",
+                "retrieved_chunks": []
             }
 
         # ---------------------------------------------------------------------
@@ -70,7 +71,8 @@ class RAGPipeline:
                 "citations": [],
                 "confidence": 0.0,
                 "refused": True,
-                "category": intent.category
+                "category": intent.category,
+                "retrieved_chunks": []
             }
 
         # ---------------------------------------------------------------------
@@ -89,7 +91,8 @@ class RAGPipeline:
                 "citations": [],
                 "confidence": 0.0,
                 "refused": True,
-                "category": ret_refusal["category"]
+                "category": ret_refusal["category"],
+                "retrieved_chunks": retrieved_chunks
             }
 
         # ---------------------------------------------------------------------
@@ -113,7 +116,8 @@ class RAGPipeline:
                 "citations": [],
                 "confidence": 0.0,
                 "refused": True,
-                "category": unconfident_refusal["category"]
+                "category": unconfident_refusal["category"],
+                "retrieved_chunks": retrieved_chunks
             }
 
         # ---------------------------------------------------------------------
@@ -151,16 +155,23 @@ class RAGPipeline:
                 "citations": [],
                 "confidence": 0.0,
                 "refused": True,
-                "category": final_refusal["category"]
+                "category": final_refusal["category"],
+                "retrieved_chunks": retrieved_chunks
             }
 
         # ---------------------------------------------------------------------
         # PHẢN HỒI RAG THÀNH CÔNG HOÀN MỸ
         # ---------------------------------------------------------------------
+        citations = [
+            c.model_dump() if hasattr(c, "model_dump") else c.dict()
+            for c in (response.citations or [])
+        ]
+
         return {
             "answer": response.answer,
-            "citations": [c.model_dump() for c in response.citations] if hasattr(response.citations[0], "model_dump") else [c.dict() for c in response.citations],
+            "citations": citations,
             "confidence": response.confidence,
             "refused": False,
-            "category": "in_scope"
+            "category": "in_scope",
+            "retrieved_chunks": retrieved_chunks
         }

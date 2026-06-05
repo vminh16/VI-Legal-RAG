@@ -29,7 +29,14 @@ class RefusalDetector:
     """
     def __init__(self, api_key: str = None):
         self.api_key = api_key or GEMINI_API_KEY
-        self.client = genai.Client(api_key=self.api_key)
+        if not self.api_key:
+            self.client = None
+        else:
+            try:
+                self.client = genai.Client(api_key=self.api_key)
+            except Exception as e:
+                logger.error(f"Thất bại khi khởi tạo genai.Client trong RefusalDetector: {e}")
+                self.client = None
 
     def detect_query_refusal(self, query: str) -> RefusalJudgment:
         """
@@ -70,6 +77,10 @@ CÁC TIÊU CHÍ PHÂN LOẠI & TỪ CHỐI BẮT BUỘC:
 Hãy trả về cấu trúc JSON khớp chính xác tuyệt đối với Pydantic schema được định nghĩa."""
 
         try:
+            if not self.client:
+                # Kích hoạt trực tiếp khối xử lý ngoại lệ (fallback offline)
+                raise ValueError("API Client chưa được kết nối")
+
             config = types.GenerateContentConfig(
                 system_instruction="Bạn là Trợ lý phân loại ý định câu hỏi tư vấn pháp lý chuyên nghiệp.",
                 response_mime_type="application/json",

@@ -87,6 +87,11 @@ LLM_MODEL_NAME = settings["models"]["llm"]
 # API Key và Cấu hình Môi trường
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 DEBUG_MODE = os.getenv("DEBUG_MODE", "False").lower() in ("true", "1", "yes")
+APP_ENV = os.getenv("APP_ENV", "development").lower().strip()
+ENABLE_DEBUG_ENDPOINTS = os.getenv("ENABLE_DEBUG_ENDPOINTS", "False").lower() in ("true", "1", "yes")
+API_AUTH_TOKEN = os.getenv("API_AUTH_TOKEN", "")
+MAX_QUERY_CHARS = int(os.getenv("MAX_QUERY_CHARS", "1000"))
+RATE_LIMIT_PER_MINUTE = int(os.getenv("RATE_LIMIT_PER_MINUTE", "0"))
 
 # Xuất bản sao cấu hình gốc dạng từ điển nếu các module khác cần truy cập trực tiếp
 SETTINGS = settings

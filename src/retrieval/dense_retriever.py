@@ -1,10 +1,38 @@
 import json
 import os
+import hashlib
 from pathlib import Path
 import numpy as np
 import faiss
 from sentence_transformers import SentenceTransformer
 from src.retrieval.query_preprocessor import QueryPreprocessor
+
+def build_index_metadata(chunks: list[dict], model_name: str, embedding_dimension: int) -> dict:
+    """Tạo metadata định danh nội dung corpus và cấu hình embedding của FAISS index."""
+    fingerprint_payload = [
+        {
+            "chunk_id": chunk.get("chunk_id", ""),
+            "text": chunk.get("text", ""),
+        }
+        for chunk in chunks
+    ]
+    encoded_payload = json.dumps(fingerprint_payload, ensure_ascii=False, sort_keys=True).encode("utf-8")
+    return {
+        "schema_version": 1,
+        "corpus_sha256": hashlib.sha256(encoded_payload).hexdigest(),
+        "chunk_count": len(chunks),
+        "model_name": str(model_name),
+        "embedding_dimension": int(embedding_dimension),
+    }
+
+def is_index_metadata_current(
+    metadata: dict,
+    chunks: list[dict],
+    model_name: str,
+    embedding_dimension: int
+) -> bool:
+    expected = build_index_metadata(chunks, model_name, embedding_dimension)
+    return metadata == expected
 
 class DenseRetriever:
     """
@@ -37,6 +65,8 @@ class DenseRetriever:
                 for line in f:
                     if line.strip():
                         self.chunks.append(json.loads(line))
+
+        self.chunk_by_id = {chunk["chunk_id"]: chunk for chunk in self.chunks}
         
         # 2. Khởi tạo mô hình Embedding
         # SentenceTransformer sẽ tự động tải hoặc nạp từ cache cục bộ của HuggingFace
@@ -45,9 +75,10 @@ class DenseRetriever:
         # 3. Quản lý Cache Index FAISS
         self.index_file = self.index_dir / "faiss_index.bin"
         self.mapping_file = self.index_dir / "faiss_mapping.json"
+        self.metadata_file = self.index_dir / "faiss_metadata.json"
         
         # Load hoặc dựng chỉ mục FAISS
-        if not force_rebuild and self.index_file.exists() and self.mapping_file.exists():
+        if not force_rebuild and self.index_file.exists() and self.mapping_file.exists() and self.metadata_file.exists():
             self._load_cached_index()
         else:
             self._build_and_cache_index()
@@ -67,6 +98,11 @@ class DenseRetriever:
             # Kiểm tra tính toàn vẹn: Số lượng vector trong FAISS và số key mapping phải khớp chính xác với corpus
             if self.index.ntotal != len(self.chunks) or len(self.mapping) != len(self.chunks):
                 raise ValueError("Số lượng vector cache lệch so với số lượng chunks hiện tại của corpus.")
+
+            with open(self.metadata_file, 'r', encoding='utf-8') as f:
+                metadata = json.load(f)
+            if not is_index_metadata_current(metadata, self.chunks, self.model_name, self.index.d):
+                raise ValueError("Metadata cache FAISS lệch so với corpus/model hiện tại.")
         except Exception as e:
             # Fallback rebuild lại index nếu load cache thất bại hoặc lệch biên
             self._build_and_cache_index()
@@ -111,6 +147,9 @@ class DenseRetriever:
         faiss.write_index(self.index, str(self.index_file))
         with open(self.mapping_file, 'w', encoding='utf-8') as f:
             json.dump(self.mapping, f, ensure_ascii=False)
+        metadata = build_index_metadata(self.chunks, self.model_name, dimension)
+        with open(self.metadata_file, 'w', encoding='utf-8') as f:
+            json.dump(metadata, f, ensure_ascii=False, indent=2)
 
     def retrieve(self, query: str, top_k: int = 5) -> list[dict]:
         """
@@ -153,7 +192,7 @@ class DenseRetriever:
             chunk_id = self.mapping.get(corpus_idx)
             
             # Khôi phục đầy đủ thông tin của chunk từ danh sách chunks
-            chunk = next((c for c in self.chunks if c["chunk_id"] == chunk_id), None)
+            chunk = self.chunk_by_id.get(chunk_id)
             if chunk:
                 chunk_copy = dict(chunk)
                 chunk_copy["score"] = score

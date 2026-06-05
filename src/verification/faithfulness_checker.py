@@ -72,7 +72,14 @@ class FaithfulnessChecker:
     """
     def __init__(self, api_key: str = None):
         self.api_key = api_key or GEMINI_API_KEY
-        self.client = genai.Client(api_key=self.api_key)
+        if not self.api_key:
+            self.client = None
+        else:
+            try:
+                self.client = genai.Client(api_key=self.api_key)
+            except Exception as e:
+                logger.error(f"Thất bại khi khởi tạo genai.Client trong FaithfulnessChecker: {e}")
+                self.client = None
 
     def check_faithfulness(self, response: RAGResponse) -> dict:
         """
@@ -116,6 +123,10 @@ class FaithfulnessChecker:
                 continue  # Bỏ qua bước gọi LLM nếu đã phát hiện lệch số thô
                 
             # 3. Gọi LLM-as-judge thẩm định ngữ nghĩa sâu
+            if not self.client:
+                # Ở chế độ Giả lập (Mock Mode), giả định các ý khác bám nguồn thành công nếu không lệch số thô
+                continue
+
             try:
                 prompt = f"""Bạn là một Thẩm định viên Pháp lý Lao động. Hãy đánh giá xem Tuyên bố (Claim) dưới đây có được chứng minh hoàn toàn bởi Bằng chứng (Evidence) được cung cấp hay không.
 Tuyệt đối KHÔNG sử dụng bất kỳ kiến thức bên ngoài nào. Chỉ được phép căn cứ vào nội dung Bằng chứng.
