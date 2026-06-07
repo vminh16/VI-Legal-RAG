@@ -46,10 +46,27 @@ def normalize_term(text: str) -> str:
     text = re.sub(r'[^\w_]', '', text)
     return text
 
+def extract_clause_number(clause_str: str | None) -> str:
+    """
+    Chuẩn hóa và trích xuất chỉ số Khoản dưới dạng chữ số (ví dụ: 'Khoản 1' -> '1', '1a' -> '1a').
+    """
+    if not clause_str:
+        return ""
+    clause_str = clause_str.strip().lower()
+    
+    if clause_str in ("none", "null", "không", "không có"):
+        return ""
+        
+    # Tìm kiếm số hiệu khoản (chữ số kèm theo ký tự chữ cái tùy chọn, ví dụ: 1, 2, 1a)
+    match = re.search(r'(?:khoản\s*|khoan\s*)?(\d+[a-z]?)', clause_str)
+    if match:
+        return match.group(1)
+    return normalize_term(clause_str)
+
 def make_key(article: str, clause: str | None) -> tuple[str, str]:
     """Tạo khóa chuẩn hóa phục vụ tra cứu chính xác Điều/Khoản."""
     art_key = normalize_term(article)
-    cl_key = normalize_term(clause) if clause else ""
+    cl_key = extract_clause_number(clause)
     return (art_key, cl_key)
 
 
@@ -90,7 +107,7 @@ class CitationChecker:
         """
         Thực hiện kiểm tra chéo trích dẫn tĩnh:
         1. So khớp nhãn trích dẫn trong văn bản [X] với danh sách citations.
-        2. Xác minh sự tồn tại của Điều/Khoản trích dẫn trong Corpus CSDL.
+        2. Xác minh sự tồn tại của Điều/Khoản trích dẫn trong Corpus CSDL (hoặc xác minh động).
         3. Xác minh Điều/Khoản có nằm trong Context được truy hồi hay không.
         4. Xác minh chuỗi bằng chứng (evidence) có khớp thực tế trong văn bản gốc.
         """
@@ -129,13 +146,41 @@ class CitationChecker:
             cit_errors = []
             cit_key = make_key(article, clause)
             
-            # Kiểm tra tồn tại trong CSDL Corpus
+            # Kiểm tra tồn tại trong CSDL Corpus (hoặc xác minh động nếu không khớp khóa chi tiết)
             corpus_chunk = self.corpus_index.get(cit_key)
             if not corpus_chunk:
-                cit_errors.append("citation_not_found_in_corpus")
-            else:
-                # Kiểm tra xem có nằm trong Context được truy hồi không
-                if cit_key not in retrieved_keys:
+                # Nếu không tìm thấy key chi tiết (Điều + Khoản), kiểm tra xem có key của cả Điều luật tổng quát không
+                fallback_key = (cit_key[0], "")
+                parent_chunk = self.corpus_index.get(fallback_key)
+                
+                if parent_chunk:
+                    # Thực hiện Xác minh động (Dynamic Verification)
+                    clause_num = cit_key[1]
+                    if clause_num:
+                        text = parent_chunk.get("text", "")
+                        text_lower = text.lower()
+                        # Regex tìm kiếm chỉ số Khoản ở đầu dòng, sau dấu xuống dòng hoặc có chữ "khoản X"
+                        clause_pattern = rf'(?:^\s*{clause_num}\b|\n\s*{clause_num}\b|khoản\s*{clause_num}\b|khoan\s*{clause_num}\b)'
+                        
+                        if not re.search(clause_pattern, text_lower):
+                            # Nếu không tìm thấy chỉ số Khoản trong văn bản gốc của Điều luật
+                            cit_errors.append("citation_not_found_in_corpus")
+                        else:
+                            # Nếu tìm thấy, coi như hợp lệ và gán chunk cha làm corpus_chunk để đối chiếu tiếp
+                            corpus_chunk = parent_chunk
+                    else:
+                        # LLM trích dẫn cả Điều và Điều có tồn tại trong CSDL
+                        corpus_chunk = parent_chunk
+                else:
+                    # Cả Điều luật cũng không tồn tại trong CSDL
+                    cit_errors.append("citation_not_found_in_corpus")
+            
+            # Nếu đã tìm thấy hoặc xác minh động thành công
+            if corpus_chunk:
+                # Kiểm tra xem Điều luật có nằm trong Context được truy hồi không (đối chiếu an toàn, bao dung)
+                art_key = make_key(article, None)[0]
+                context_has_art = any(k[0] == art_key for k in retrieved_keys)
+                if not context_has_art:
                     cit_errors.append("citation_not_in_retrieved_context")
                     
                 # Kiểm tra tính chuẩn xác của chuỗi bằng chứng (Evidence check)
@@ -163,3 +208,4 @@ class CitationChecker:
             "errors": unique_errors,
             "details": details
         }
+

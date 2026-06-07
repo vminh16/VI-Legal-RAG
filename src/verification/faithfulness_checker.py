@@ -21,49 +21,81 @@ class FaithfulnessJudgment(BaseModel):
 
 def segment_claims(answer: str) -> list[dict]:
     """
-    Tách câu trả lời thành các Claim độc lập kết thúc bằng nhãn trích dẫn [X].
-    Ví dụ: 'A [1]. B [2].' -> [{'claim': 'A', 'citation_id': 1}, {'claim': 'B', 'citation_id': 2}]
+    Tách câu trả lời thành các Tuyên bố (Claims) độc lập bằng cách phân tích theo từng câu
+    và liên kết với các nhãn trích dẫn [X] xuất hiện trong chính câu đó.
     """
     if not answer:
         return []
         
-    parts = re.split(r'(\[\d+\])', answer)
+    # Tách thành các đoạn/dòng trước
+    paragraphs = answer.split('\n')
     claims = []
     
-    # parts chứa xen kẽ văn bản và nhãn: [text_0, label_1, text_1, label_2, ...]
-    for i in range(0, len(parts) - 1, 2):
-        claim_text = parts[i].strip()
+    for para in paragraphs:
+        if not para.strip():
+            continue
         
-        # Loại bỏ các ký tự dấu câu thừa ở đầu và cuối claim
-        claim_text = re.sub(r'^[\s\.\,\;\:\-\–\—\•]+|[\s\.\,\;\:\-\–\—\•]+$', '', claim_text).strip()
-        marker = parts[i+1]
+        # Tách đoạn thành các câu bằng dấu chấm câu (kết thúc bằng ., ?, ! và có khoảng trắng phía sau)
+        sentences = re.split(r'(?<=[.!?])\s+', para)
         
-        # Trích xuất số ID trích dẫn
-        match = re.search(r'\d+', marker)
-        if match and claim_text:
-            cit_id = int(match.group())
-            claims.append({
-                "claim": claim_text,
-                "citation_id": cit_id,
-                "marker": marker
-            })
-            
+        for sentence in sentences:
+            sentence = sentence.strip()
+            if not sentence:
+                continue
+                
+            # Tìm tất cả các nhãn [X] trong câu này
+            markers = re.findall(r'(\[(\d+)\])', sentence)
+            if markers:
+                # Làm sạch câu bằng cách loại bỏ các nhãn trích dẫn [X] ra khỏi text của claim
+                claim_text = sentence
+                for marker, _ in markers:
+                    claim_text = claim_text.replace(marker, "")
+                
+                # Loại bỏ các ký tự dấu câu và ký tự đặc biệt thừa ở đầu và cuối claim
+                claim_text = re.sub(r'^[\s\.\,\;\:\-\–\—\•\*]+|[\s\.\,\;\:\-\–\—\•\*]+$', '', claim_text).strip()
+                
+                if claim_text:
+                    for marker, cit_id_str in markers:
+                        claims.append({
+                            "claim": claim_text,
+                            "citation_id": int(cit_id_str),
+                            "marker": marker
+                        })
     return claims
 
-def check_numeric_discrepancy(claim: str, evidence: str) -> str | None:
+def check_numeric_discrepancy(claim: str, evidence: str, article: str = "", clause: str | None = None) -> str | None:
     """
     Kiểm tra thô bằng Rule-based phát hiện sai lệch số liệu/thời hạn.
-    Ví dụ: claim nói 60 ngày nhưng evidence ghi 30 ngày.
+    Loại bỏ các con số định danh hệ thống (năm luật 2019, số hiệu Điều, số hiệu Khoản) để tránh cảnh báo giả (False Positive).
     """
     # Trích xuất tất cả chữ số độc lập
     claim_nums = set(re.findall(r'\b\d+\b', claim))
     evidence_nums = set(re.findall(r'\b\d+\b', evidence))
     
-    # Bỏ qua số 0 và 1 vì chúng có thể là số thứ tự hoặc số Điều/Khoản
+    # Các số định danh cần bỏ qua (Bypass list)
+    bypass_nums = {"2019", "2020", "2021"} # Năm ban hành bộ luật
+    
+    # Bỏ qua số hiệu Điều luật
+    if article:
+        art_num_match = re.search(r'\d+', article)
+        if art_num_match:
+            bypass_nums.add(art_num_match.group())
+            
+    # Bỏ qua số hiệu Khoản luật
+    if clause:
+        cl_num_match = re.search(r'\d+', str(clause))
+        if cl_num_match:
+            bypass_nums.add(cl_num_match.group())
+    
+    # Loại bỏ các số bypass khỏi claim_nums
+    claim_nums = claim_nums - bypass_nums
+    
+    # Bỏ qua số 0 và 1 vì chúng có thể là số thứ tự
     conflicts = [n for n in claim_nums if n not in evidence_nums and int(n) > 1]
     if conflicts:
         return f"mâu thuẫn số liệu: Claim chứa số ({', '.join(conflicts)}) không xuất hiện trong Evidence."
     return None
+
 
 
 class FaithfulnessChecker:
@@ -110,7 +142,7 @@ class FaithfulnessChecker:
             evidence = cit.evidence or ""
             
             # 2. Kiểm tra thô Rule-based phát hiện lệch số
-            num_error = check_numeric_discrepancy(claim_text, evidence)
+            num_error = check_numeric_discrepancy(claim_text, evidence, cit.article, cit.clause)
             if num_error:
                 conflicts.append({
                     "citation_id": cit_id,
