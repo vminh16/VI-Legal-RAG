@@ -318,3 +318,28 @@ def test_faithfulness_checker_missing_disclaimer():
     report = checker.check_disclaimer(no_disclaimer_response)
     assert report["has_disclaimer"] is False
     assert "missing_disclaimer" in report["errors"]
+
+def test_arithmetic_verifier_bypass_valid():
+    """Kiểm định Arithmetic-aware Verification: Bỏ qua số trong câu hỏi người dùng và phép nhân phần trăm hợp lệ."""
+    from src.verification.faithfulness_checker import check_numeric_discrepancy
+    
+    # Số 500000 trong query, 300% trong evidence. Kết quả 1500000 tính ra hợp lệ.
+    query = "Lương ngày thường của tôi là 500.000 đồng, đi làm Tết được bao nhiêu?"
+    evidence = "Người lao động làm việc vào ngày nghỉ lễ, tết được trả ít nhất bằng 300% lương ngày thường."
+    claim = "Tiền lương làm việc vào ngày lễ Tết là: 500.000 đồng * 300% = 1.500.000 đồng."
+    
+    err = check_numeric_discrepancy(claim, evidence, article="Điều 98", clause="1", query=query)
+    assert err is None, f"Lẽ ra phép tính hợp lệ phải được thông qua, nhưng báo lỗi: {err}"
+
+def test_arithmetic_verifier_mismatch():
+    """Kiểm định Arithmetic-aware Verification: Phép tính sai bị chặn bởi bộ đối chiếu số."""
+    from src.verification.faithfulness_checker import check_numeric_discrepancy
+    
+    # 500.000 * 300% = 18.000.000 là phép tính sai lệch
+    query = "Lương ngày thường của tôi là 500.000 đồng, đi làm Tết được bao nhiêu?"
+    evidence = "Người lao động làm việc vào ngày nghỉ lễ, tết được trả ít nhất bằng 300% lương ngày thường."
+    claim = "Tiền lương làm việc vào ngày lễ Tết là: 500.000 đồng * 300% = 18.000.000 đồng."
+    
+    err = check_numeric_discrepancy(claim, evidence, article="Điều 98", clause="1", query=query)
+    assert err is not None, "Phép tính sai lệch lẽ ra phải bị chặn lại."
+    assert "mâu thuẫn số liệu" in err

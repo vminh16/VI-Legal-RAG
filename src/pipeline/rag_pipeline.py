@@ -124,7 +124,7 @@ class RAGPipeline:
         # THÀNH PHẦN 8 & 9: HẬU KIỂM TĨNH VÀ ĐỘNG (CHECKERS)
         # ---------------------------------------------------------------------
         citation_report = self.citation_checker.check_citations(response, merged_chunks)
-        faithfulness_report = self.faithfulness_checker.check_faithfulness(response)
+        faithfulness_report = self.faithfulness_checker.check_faithfulness(response, query=query)
         disclaimer_report = self.faithfulness_checker.check_disclaimer(response)
 
         # Hợp nhất toàn bộ lỗi kiểm định của bộ đôi Checkers

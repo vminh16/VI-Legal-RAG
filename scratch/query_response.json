@@ -1,0 +1,54 @@
+{
+  "answer": "Hệ thống đang gặp sự cố kỹ thuật khi kết nối với mô hình ngôn ngữ lớn (Gemini). Lỗi: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}",
+  "citations": [],
+  "confidence": 0.0,
+  "refused": true,
+  "category": "generation_unconfident",
+  "retrieved_chunks": [
+    {
+      "chunk_id": "bll2019_dieu_26",
+      "text": "Điều 26. Tiền lương thử việc\nTiền lương của người lao động trong thời gian thử việc do hai bên thỏa thuận nhưng ít nhất phải bằng 85% mức lương của công việc đó.",
+      "score": 0.9923251867294312,
+      "article": "Điều 26",
+      "clause": null,
+      "chapter": "Chương III",
+      "title": "Tiền lương thử việc"
+    },
+    {
+      "chunk_id": "bll2019_dieu_101",
+      "text": "Điều 101. Tạm ứng tiền lương\n1. Người lao động được tạm ứng tiền lương theo điều kiện do hai bên thỏa thuận và không bị tính lãi.\n2. Người sử dụng lao động phải cho người lao động tạm ứng tiền lương tương ứng với số ngày người lao động tạm thời nghỉ việc để thực hiện nghĩa vụ công dân từ 01 tuần trở lên nhưng tối đa không quá 01 tháng tiền lương theo hợp đồng lao động và người lao động phải hoàn trả số tiền đã tạm ứng.\nNgười lao động nhập ngũ theo quy định của Luật Nghĩa vụ quân sự thì không được tạm ứng tiền lương.\n3. Khi nghỉ hằng năm, người lao động được tạm ứng một khoản tiền ít nhất bằng tiền lương của những ngày nghỉ.",
+      "score": 0.3857206404209137,
+      "article": "Điều 101",
+      "clause": null,
+      "chapter": "Chương VI",
+      "title": "Tạm ứng tiền lương"
+    },
+    {
+      "chunk_id": "bll2019_dieu_90",
+      "text": "Điều 90. Tiền lương\n1. Tiền lương là số tiền mà người sử dụng lao động trả cho người lao động theo thỏa thuận để thực hiện công việc, bao gồm mức lương theo công việc hoặc chức danh, phụ cấp lương và các khoản bổ sung khác.\n2. Mức lương theo công việc hoặc chức danh không được thấp hơn mức lương tối thiểu.\n3. Người sử dụng lao động phải bảo đảm trả lương bình đẳng, không phân biệt giới tính đối với người lao động làm công việc có giá trị như nhau.",
+      "score": 0.27487829327583313,
+      "article": "Điều 90",
+      "clause": null,
+      "chapter": "Chương VI",
+      "title": "Tiền lương"
+    },
+    {
+      "chunk_id": "bll2019_dieu_99",
+      "text": "Điều 99. Tiền lương ngừng việc\nTrường hợp phải ngừng việc, người lao động được trả lương như sau:\n1. Nếu do lỗi của người sử dụng lao động thì người lao động được trả đủ tiền lương theo hợp đồng lao động;\n2. Nếu do lỗi của người lao động thì người đó không được trả lương; những người lao động khác trong cùng đơn vị phải ngừng việc thì được trả lương theo mức do hai bên thỏa thuận nhưng không được thấp hơn mức lương tối thiểu;\n3. Nếu vì sự cố về điện, nước mà không do lỗi của người sử dụng lao động hoặc do thiên tai, hỏa hoạn, dịch bệnh nguy hiểm, địch họa, di dời địa điểm hoạt động theo yêu cầu của cơ quan nhà nước có thẩm quyền hoặc vì lý do kinh tế thì hai bên thỏa thuận về tiền lương ngừng việc như sau:\na) Trường hợp ngừng việc từ 14 ngày làm việc trở xuống thì tiền lương ngừng việc được thỏa thuận không thấp hơn mức lương tối thiểu;\nb) Trường hợp phải ngừng việc trên 14 ngày làm việc thì tiền lương ngừng việc do hai bên thỏa thuận nhưng phải bảo đảm tiền lương ngừng việc trong 14 ngày đầu tiên không thấp hơn mức lương tối thiểu.",
+      "score": 0.19040752947330475,
+      "article": "Điều 99",
+      "clause": null,
+      "chapter": "Chương VI",
+      "title": "Tiền lương ngừng việc"
+    },
+    {
+      "chunk_id": "bll2019_dieu_94",
+      "text": "Điều 94. Nguyên tắc trả lương\n1. Người sử dụng lao động phải trả lương trực tiếp, đầy đủ, đúng hạn cho người lao động. Trường hợp người lao động không thể nhận lương trực tiếp thì người sử dụng lao động có thể trả lương cho người được người lao động ủy quyền hợp pháp.\n2. Người sử dụng lao động không được hạn chế hoặc can thiệp vào quyền tự quyết chi tiêu lương của người lao động; không được ép buộc người lao động chi tiêu lương vào việc mua hàng hóa, sử dụng dịch vụ của người sử dụng lao động hoặc của đơn vị khác mà người sử dụng lao động chỉ định.",
+      "score": 0.13965867459774017,
+      "article": "Điều 94",
+      "clause": null,
+      "chapter": "Chương VI",
+      "title": "Nguyên tắc trả lương"
+    }
+  ]
+}

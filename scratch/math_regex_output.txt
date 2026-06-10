@@ -1,0 +1,33 @@
+Regex Matching Results:
+Case: 500.000 đồng * 300% = 1.500.000 đồng
+Matches: [('500.000', '*', '300%', '1.500.000')]
+  Parsed: op1=500000.0, op2=300.0 (pct=True), res=1500000.0
+  Calculated: 1500000.0, Diff: 0.0 -> VALID
+
+Case: 500.000đ * 300% = 1.500.000đ
+Matches: [('500.000', '*', '300%', '1.500.000')]
+  Parsed: op1=500000.0, op2=300.0 (pct=True), res=1500000.0
+  Calculated: 1500000.0, Diff: 0.0 -> VALID
+
+Case: 500.000 * 3 = 1.500.000
+Matches: [('500.000', '*', '3', '1.500.000')]
+  Parsed: op1=500000.0, op2=3.0 (pct=False), res=1500000.0
+  Calculated: 1500000.0, Diff: 0.0 -> VALID
+
+Case: 500,000đ x 300% = 1,500,000đ
+Matches: [('500,000', 'x', '300%', '1,500,000')]
+  Parsed: op1=500000.0, op2=300.0 (pct=True), res=1500000.0
+  Calculated: 1500000.0, Diff: 0.0 -> VALID
+
+Case: 500.000 đồng * 3 = 1.500.000đ
+Matches: [('500.000', '*', '3', '1.500.000')]
+  Parsed: op1=500000.0, op2=3.0 (pct=False), res=1500000.0
+  Calculated: 1500000.0, Diff: 0.0 -> VALID
+
+Case: 500.000 * 300% = 1.500.000đ
+Matches: [('500.000', '*', '300%', '1.500.000')]
+  Parsed: op1=500000.0, op2=300.0 (pct=True), res=1500000.0
+  Calculated: 1500000.0, Diff: 0.0 -> VALID
+
+Case: Lương 10.5 triệu * 1.5 = 15.75 triệu
+Matches: []

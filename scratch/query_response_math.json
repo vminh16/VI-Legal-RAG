@@ -1,0 +1,54 @@
+{
+  "answer": "Dựa trên Bộ luật Lao động 2019 và dữ liệu ngữ cảnh được cung cấp, tôi không tìm thấy căn cứ pháp lý liên quan hoặc phát hiện sự mâu thuẫn để trả lời câu hỏi của bạn. Vui lòng đặt lại câu hỏi rõ ràng hơn.",
+  "citations": [],
+  "confidence": 0.0,
+  "refused": true,
+  "category": "critical_validation_error",
+  "retrieved_chunks": [
+    {
+      "chunk_id": "bll2019_dieu_101",
+      "text": "Điều 101. Tạm ứng tiền lương\n1. Người lao động được tạm ứng tiền lương theo điều kiện do hai bên thỏa thuận và không bị tính lãi.\n2. Người sử dụng lao động phải cho người lao động tạm ứng tiền lương tương ứng với số ngày người lao động tạm thời nghỉ việc để thực hiện nghĩa vụ công dân từ 01 tuần trở lên nhưng tối đa không quá 01 tháng tiền lương theo hợp đồng lao động và người lao động phải hoàn trả số tiền đã tạm ứng.\nNgười lao động nhập ngũ theo quy định của Luật Nghĩa vụ quân sự thì không được tạm ứng tiền lương.\n3. Khi nghỉ hằng năm, người lao động được tạm ứng một khoản tiền ít nhất bằng tiền lương của những ngày nghỉ.",
+      "score": 0.06741505861282349,
+      "article": "Điều 101",
+      "clause": null,
+      "chapter": "Chương VI",
+      "title": "Tạm ứng tiền lương"
+    },
+    {
+      "chunk_id": "bll2019_dieu_112",
+      "text": "Điều 112. Nghỉ lễ, tết\n1. Người lao động được nghỉ làm việc, hưởng nguyên lương trong những ngày lễ, tết sau đây:\na) Tết Dương lịch: 01 ngày (ngày 01 tháng 01 dương lịch);\nb) Tết Âm lịch: 05 ngày;\nc) Ngày Chiến thắng: 01 ngày (ngày 30 tháng 4 dương lịch);\nd) Ngày Quốc tế lao động: 01 ngày (ngày 01 tháng 5 dương lịch);\nđ) Quốc khánh: 02 ngày (ngày 02 tháng 9 dương lịch và 01 ngày liền kề trước hoặc sau);\ne) Ngày Giỗ Tổ Hùng Vương: 01 ngày (ngày 10 tháng 3 âm lịch).\n2. Lao động là người nước ngoài làm việc tại Việt Nam ngoài các ngày nghỉ theo quy định tại khoản 1 Điều này còn được nghỉ thêm 01 ngày Tết cổ truyền dân tộc và 01 ngày Quốc khánh của nước họ.\n3. Hằng năm, căn cứ vào điều kiện thực tế, Thủ tướng Chính phủ quyết định cụ thể ngày nghỉ quy định tại điểm b và điểm đ khoản 1 Điều này.",
+      "score": 0.06517188996076584,
+      "article": "Điều 112",
+      "clause": null,
+      "chapter": "Chương VII",
+      "title": "Nghỉ lễ, tết"
+    },
+    {
+      "chunk_id": "bll2019_dieu_98",
+      "text": "Điều 98. Tiền lương làm thêm giờ, làm việc vào ban đêm\n1. Người lao động làm thêm giờ được trả lương tính theo đơn giá tiền lương hoặc tiền lương thực trả theo công việc đang làm như sau:\na) Vào ngày thường, ít nhất bằng 150%;\nb) Vào ngày nghỉ hằng tuần, ít nhất bằng 200%;\nc) Vào ngày nghỉ lễ, tết, ngày nghỉ có hưởng lương, ít nhất bằng 300% chưa kể tiền lương ngày lễ, tết, ngày nghỉ có hưởng lương đối với người lao động hưởng lương ngày.\n2. Người lao động làm việc vào ban đêm thì được trả thêm ít nhất bằng 30% tiền lương tính theo đơn giá tiền lương hoặc tiền lương thực trả theo công việc của ngày làm việc bình thường.\n3. Người lao động làm thêm giờ vào ban đêm thì ngoài việc trả lương theo quy định tại khoản 1 và khoản 2 Điều này, người lao động còn được trả thêm 20% tiền lương tính theo đơn giá tiền lương hoặc tiền lương theo công việc làm vào ban ngày của ngày làm việc bình thường hoặc của ngày nghỉ hằng tuần hoặc của ngày nghỉ lễ, tết.\n4. Chính phủ quy định chi tiết Điều này.",
+      "score": 0.06435521692037582,
+      "article": "Điều 98",
+      "clause": null,
+      "chapter": "Chương VI",
+      "title": "Tiền lương làm thêm giờ, làm việc vào ban đêm"
+    },
+    {
+      "chunk_id": "bll2019_dieu_90",
+      "text": "Điều 90. Tiền lương\n1. Tiền lương là số tiền mà người sử dụng lao động trả cho người lao động theo thỏa thuận để thực hiện công việc, bao gồm mức lương theo công việc hoặc chức danh, phụ cấp lương và các khoản bổ sung khác.\n2. Mức lương theo công việc hoặc chức danh không được thấp hơn mức lương tối thiểu.\n3. Người sử dụng lao động phải bảo đảm trả lương bình đẳng, không phân biệt giới tính đối với người lao động làm công việc có giá trị như nhau.",
+      "score": 0.05364247038960457,
+      "article": "Điều 90",
+      "clause": null,
+      "chapter": "Chương VI",
+      "title": "Tiền lương"
+    },
+    {
+      "chunk_id": "bll2019_dieu_113_khoan_1",
+      "text": "Điều 113. Nghỉ hằng năm\n1. Người lao động làm việc đủ 12 tháng cho một người sử dụng lao động thì được nghỉ hằng năm, hưởng nguyên lương theo hợp đồng lao động như sau:\na) 12 ngày làm việc đối với người làm công việc trong điều kiện bình thường;\nb) 14 ngày làm việc đối với người lao động chưa thành niên, lao động là người khuyết tật, người làm nghề, công việc nặng nhọc, độc hại, nguy hiểm;\nc) 16 ngày làm việc đối với người làm nghề, công việc đặc biệt nặng nhọc, độc hại, nguy hiểm.",
+      "score": 0.050023000687360764,
+      "article": "Điều 113",
+      "clause": "1",
+      "chapter": "Chương VII",
+      "title": "Nghỉ hằng năm"
+    }
+  ]
+}

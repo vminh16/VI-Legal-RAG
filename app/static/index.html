@@ -26,25 +26,28 @@
             </div>
 
             <div class="config-group">
-                <label class="config-label" for="topk-slider">Số tài liệu lấy (Top-K)</label>
-                <input type="range" id="topk-slider" class="config-slider" min="1" max="10" value="5" oninput="this.nextElementSibling.value = this.value">
-                <output style="font-size: 13px; font-weight: 600; text-align: right; margin-top: 4px; display: block;">5</output>
-            </div>
-
-            <!-- Giả lập Debug từ chối cho nhà phát triển -->
-            <div class="config-group">
-                <label class="config-label">Chế độ kiểm thử (Debug)</label>
-                <div style="display: flex; flex-direction: column; gap: 8px; font-size: 13px; margin-top: 4px;">
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                        <input type="checkbox" id="bypass-refusal-checkbox" style="cursor: pointer;">
-                        Bỏ qua các tầng Từ chối (Bypass)
-                    </label>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <label class="config-label" for="topk-slider">Số tài liệu lấy (Top-K)</label>
+                    <output id="topk-output" style="font-size: 13px; font-weight: 600; color: var(--accent-blue);">5</output>
                 </div>
+                <input type="range" id="topk-slider" class="config-slider" min="1" max="10" value="5" oninput="document.getElementById('topk-output').value = this.value">
             </div>
 
-            <!-- Status card -->
+            <!-- Điều khiển chế độ kiểm thử (Toggle Switch) -->
+            <div class="config-group">
+                <label class="config-label">Cấu hình nâng cao</label>
+                <label class="toggle-wrapper">
+                    <span class="toggle-text">Bỏ qua từ chối (Bypass)</span>
+                    <span class="switch">
+                        <input type="checkbox" id="bypass-refusal-checkbox">
+                        <span class="slider"></span>
+                    </span>
+                </label>
+            </div>
+
+            <!-- Status Card -->
             <div class="status-card">
-                <div class="config-label" style="border-bottom: 1px solid var(--border-glass); padding-bottom: 6px;">Trạng thái hệ thống</div>
+                <div class="config-label" style="border-bottom: 1px solid var(--border-glass); padding-bottom: 6px; margin-bottom: 4px;">Trạng thái hệ thống</div>
                 <div class="status-row">
                     <span>Trạng thái:</span>
                     <span id="sys-status" class="status-val status-active">Đang tải...</span>
@@ -68,30 +71,30 @@
         <main class="main-area">
             <!-- Header -->
             <header class="main-header">
-                <div style="font-size: 16px; font-weight: 600;">Hỏi đáp Bộ luật Lao động Việt Nam 2019</div>
+                <h1>Hỏi đáp Bộ luật Lao động Việt Nam 2019</h1>
                 <div class="header-status">
                     <span class="dot"></span>
-                    <span>ASGI Server - FastAPI & Uvicorn</span>
+                    <span>Hệ thống trực tuyến</span>
                 </div>
             </header>
 
-            <!-- Chat Display area -->
+            <!-- Chat Display Area -->
             <section id="chat-window" class="chat-window">
                 <!-- Welcome Message -->
                 <div class="message bot">
                     <div class="message-avatar">RAG</div>
                     <div class="message-bubble">
-                        Xin chào! Tôi là Trợ lý AI chuyên trách tư vấn giải thích <strong>Bộ luật Lao động Việt Nam 2019</strong>. 
+                        Xin chào! Tôi là Trợ lý AI chuyên trách tư vấn, tra cứu <strong>Bộ luật Lao động Việt Nam 2019</strong>.
                         <br><br>
-                        Hệ thống được thiết kế với cơ chế RAG có trích dẫn nguồn chuẩn xác đến từng Điều/Khoản luật và tích hợp bộ lọc phòng vệ 3 tầng để tránh ảo tưởng thông tin. 
-                        Bạn hãy chọn câu hỏi nhanh phía dưới hoặc nhập câu hỏi tự do để bắt đầu.
+                        Hệ thống được tối ưu hóa với công nghệ RAG trích dẫn nguồn chính xác đến từng Điều/Khoản luật, đồng thời tích hợp bộ kiểm định an toàn độc lập để loại bỏ thông tin sai lệch. 
+                        Bạn hãy chọn câu hỏi gợi ý nhanh phía dưới hoặc nhập câu hỏi trực tiếp để bắt đầu.
                     </div>
                 </div>
             </section>
 
-            <!-- Prompt Input area -->
+            <!-- Prompt Input Area -->
             <section class="input-area">
-                <!-- Suggestion tags -->
+                <!-- Suggestion Tags -->
                 <div class="suggestions">
                     <button class="suggestion-btn" id="sug-salary" onclick="askSuggestion('Thử việc có được trả lương không và mức trả tối thiểu là bao nhiêu?')">Lương thử việc</button>
                     <button class="suggestion-btn" id="sug-id" onclick="askSuggestion('Công ty có quyền giữ chứng minh nhân dân gốc của tôi khi ký hợp đồng không?')">Giữ giấy tờ tùy thân</button>
@@ -100,19 +103,22 @@
                     <button class="suggestion-btn" id="sug-fine" onclick="askSuggestion('Nếu công ty bắt tôi làm thêm quá giờ quy định thì bị phạt bao nhiêu tiền?')">Phạt tiền làm thêm</button>
                 </div>
 
-                <!-- Input input block -->
+                <!-- Input block -->
                 <div class="input-wrapper">
                     <textarea id="query-input" class="query-input" placeholder="Nhập câu hỏi tra cứu pháp luật lao động..." rows="1"></textarea>
                     <button id="send-btn" class="send-btn">Gửi</button>
                 </div>
             </section>
 
-            <!-- Debug Drawer -->
-            <footer class="debug-drawer">
-                <div class="debug-tabs">
-                    <div class="debug-tab active" data-tab="retrieved">Văn bản truy hồi (Retrieved Chunks)</div>
-                    <div class="debug-tab" data-tab="checkers">Kết quả Hậu kiểm (Checkers Report)</div>
-                    <div class="debug-tab" data-tab="system">Chỉ số Hệ thống (Metrics)</div>
+            <!-- Collapsible Debug Drawer -->
+            <footer class="debug-drawer" id="debug-drawer">
+                <div class="debug-header">
+                    <div class="debug-tabs">
+                        <div class="debug-tab active" data-tab="retrieved">Văn bản truy hồi</div>
+                        <div class="debug-tab" data-tab="checkers">Kết quả hậu kiểm</div>
+                        <div class="debug-tab" data-tab="system">Chỉ số hệ thống</div>
+                    </div>
+                    <button class="debug-toggle-btn" id="debug-toggle-btn">Mở rộng ↑</button>
                 </div>
                 <div id="debug-content" class="debug-content">
                     Bắt đầu nhập câu hỏi để xem chi tiết dữ liệu debug hệ thống...
