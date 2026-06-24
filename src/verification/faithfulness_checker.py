@@ -69,17 +69,28 @@ def check_numeric_discrepancy(claim: str, evidence: str, article: str = "", clau
     Bổ sung bộ tự động tính toán lại ở backend (Arithmetic Re-calculation) để bỏ qua
     biến số người dùng và kết quả phép nhân/phần trăm hợp lệ.
     """
+    # Làm sạch các năm định danh pháp luật cụ thể để tránh bị trích xuất nhầm thành số liệu cần kiểm tra
+    def clean_law_years(text: str) -> str:
+        if not text:
+            return ""
+        text = re.sub(r'(?:bộ\s+luật\s+lao\s+động|luật\s+lao\s+động|bllđ)\s*(?:năm\s*)?2019', '', text, flags=re.IGNORECASE)
+        text = re.sub(r'45/2019/qh14', '', text, flags=re.IGNORECASE)
+        text = re.sub(r'(?:hiệu\s+lực\s+từ\s*|ngày\s*)?0?1/0?1/2021', '', text, flags=re.IGNORECASE)
+        text = re.sub(r'(?:năm\s*)?2020', '', text, flags=re.IGNORECASE)
+        return text
+
+    claim_cleaned = clean_law_years(claim)
+    evidence_cleaned = clean_law_years(evidence)
+    query_cleaned = clean_law_years(query) if query else ""
+
     # Trích xuất toàn bộ số từ query
-    query_nums = set(re.findall(r'\b\d+\b', query)) if query else set()
+    query_nums = set(re.findall(r'\b\d+\b', query_cleaned)) if query_cleaned else set()
     
     # Trích xuất toàn bộ số từ evidence
-    evidence_nums = set(re.findall(r'\b\d+\b', evidence))
+    evidence_nums = set(re.findall(r'\b\d+\b', evidence_cleaned))
     
     # Các số định danh cần bỏ qua (Bypass list)
-    bypass_nums = {"2019", "2020", "2021"} # Năm ban hành bộ luật
-    
-    # Thêm số từ query (biến số người dùng cung cấp)
-    bypass_nums.update(query_nums)
+    bypass_nums = set()
     
     # Bỏ qua số hiệu Điều luật
     if article:
@@ -96,7 +107,7 @@ def check_numeric_discrepancy(claim: str, evidence: str, article: str = "", clau
     # QUÉT VÀ XÁC THỰC PHÉP TOÁN (Arithmetic Re-calculation)
     # Nhận diện phép toán dạng: A * B = C hoặc A x B = C hoặc A * B% = C
     math_pattern = r'(\d+[\d\.,]*)\s*(?:đồng|đ|USD|%)?\s*([\*xX\/+-])\s*(\d+[\d\.,]*%?)\s*=\s*(\d+[\d\.,]*)'
-    math_matches = re.findall(math_pattern, claim)
+    math_matches = re.findall(math_pattern, claim_cleaned)
     
     for op1_str, operator, op2_str, res_str in math_matches:
         try:
@@ -162,7 +173,7 @@ def check_numeric_discrepancy(claim: str, evidence: str, article: str = "", clau
             logger.warning(f"Arithmetic Verification: Lỗi khi tính toán lại phép tính: {e}")
     
     # Trích xuất tất cả chữ số từ claim
-    claim_nums = set(re.findall(r'\b\d+\b', claim))
+    claim_nums = set(re.findall(r'\b\d+\b', claim_cleaned))
     
     # Loại bỏ các số bypass khỏi claim_nums
     claim_nums = claim_nums - bypass_nums
@@ -246,7 +257,7 @@ class FaithfulnessChecker:
             nli_resolved = False
             if self.nli_model is not None:
                 try:
-                    scores = self.nli_model.predict([evidence, claim_text])
+                    scores = self.nli_model.predict([(evidence, claim_text)])[0]
                     
                     # Tính toán xác suất dạng softmax
                     import numpy as np

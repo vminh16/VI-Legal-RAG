@@ -45,7 +45,7 @@ class RAGEvaluator:
             return ""
         clean = article_str.strip().lower()
         # Chuyển đổi không dấu cơ bản để so khớp
-        clean = clean.replace("điều", "dieu").replace("dieu ", "dieu")
+        clean = clean.replace("điều", "dieu")
         match = re.search(r"dieu\s*(\d+)", clean)
         if match:
             return f"Điều {match.group(1)}"

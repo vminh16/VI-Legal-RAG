@@ -32,6 +32,7 @@ async def lifespan(app: FastAPI):
         logger.info("[SUCCESS] Đã khởi tạo và nạp thành công RAGPipeline vào bộ nhớ!")
     except Exception as e:
         logger.error(f"[CRITICAL] Thất bại khi khởi tạo RAGPipeline: {e}")
+        raise e
         
     yield
     

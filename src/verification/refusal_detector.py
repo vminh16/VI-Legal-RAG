@@ -145,7 +145,13 @@ Hãy trả về cấu trúc JSON khớp chính xác tuyệt đối với Pydanti
 
         # Lấy điểm số của chunk cao nhất
         top_chunk = retrieved_chunks[0]
-        score = top_chunk.get("score", 0.0)
+        score = top_chunk.get("score")
+        if score is None:
+            # Nếu không có score, mặc định thông qua (không kích hoạt từ chối tương đồng)
+            return {
+                "refuse": False,
+                "category": "in_scope"
+            }
         
         strategy = strategy.lower().strip()
         refuse = False
@@ -216,3 +222,21 @@ Hãy trả về cấu trúc JSON khớp chính xác tuyệt đối với Pydanti
             "refuse": False,
             "category": "in_scope"
         }
+
+
+class BypassRefusalDetector:
+    """Detector giả lập để bỏ qua các tầng từ chối phục vụ mục đích debug và kiểm thử."""
+    class MockRefusalJudgment:
+        def __init__(self):
+            self.refuse = False
+            self.reason = "Bypassed."
+            self.category = "in_scope"
+
+    def detect_query_refusal(self, query: str):
+        return self.MockRefusalJudgment()
+
+    def detect_retrieval_refusal(self, retrieved_chunks: list, strategy: str):
+        return {"refuse": False, "category": "in_scope"}
+
+    def detect_output_refusal(self, response, verification_report: dict):
+        return {"refuse": False, "category": "in_scope"}

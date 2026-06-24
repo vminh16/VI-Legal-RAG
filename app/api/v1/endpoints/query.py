@@ -10,22 +10,7 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 _rate_limit_buckets: dict[str, list[float]] = {}
 
-class BypassRefusalDetector:
-    """Detector giả lập để bỏ qua các tầng từ chối phục vụ mục đích debug và kiểm thử."""
-    class MockRefusalJudgment:
-        def __init__(self):
-            self.refuse = False
-            self.reason = "Bypassed."
-            self.category = "in_scope"
-
-    def detect_query_refusal(self, query: str):
-        return self.MockRefusalJudgment()
-
-    def detect_retrieval_refusal(self, retrieved_chunks: list, strategy: str):
-        return {"refuse": False, "category": "in_scope"}
-
-    def detect_output_refusal(self, response, verification_report: dict):
-        return {"refuse": False, "category": "in_scope"}
+# Lớp BypassRefusalDetector cũ đã được di chuyển sang src/verification/refusal_detector.py
 
 def _env_flag(name: str) -> bool:
     return os.getenv(name, "False").lower() in ("true", "1", "yes")
@@ -54,6 +39,12 @@ def _enforce_rate_limit(request: Request) -> None:
     client_host = request.client.host if request.client else "unknown"
     now = time.monotonic()
     window_start = now - 60.0
+
+    # Dọn dẹp định kỳ các IP đã hết hạn rate limit để tránh rò rỉ bộ nhớ (BUG-08)
+    expired_hosts = [host for host, stamps in _rate_limit_buckets.items() if not stamps or all(s < window_start for s in stamps)]
+    for host in expired_hosts:
+        _rate_limit_buckets.pop(host, None)
+
     bucket = [stamp for stamp in _rate_limit_buckets.get(client_host, []) if stamp >= window_start]
     if len(bucket) >= limit:
         _rate_limit_buckets[client_host] = bucket
@@ -78,30 +69,21 @@ def query_rag(request: QueryRequest, http_request: Request, pipeline: RAGPipelin
         _enforce_auth(http_request)
         _enforce_rate_limit(http_request)
 
+        bypass_refusal = False
         if request.bypass_refusal:
             if not _debug_bypass_enabled():
                 raise HTTPException(
                     status_code=403,
                     detail="Chế độ bypass refusal chỉ được phép trong môi trường debug nội bộ."
                 )
-            # Tạm thời ghi đè refusal detector bằng bộ phát hiện bỏ qua (bypass)
-            orig_detector = getattr(pipeline, "refusal_detector", None)
-            pipeline.refusal_detector = BypassRefusalDetector()
-            try:
-                result = pipeline.answer_question(
-                    query=request.query,
-                    strategy=request.strategy,
-                    top_k=request.top_k
-                )
-            finally:
-                # Đảm bảo luôn khôi phục detector ban đầu sau khi chạy xong
-                pipeline.refusal_detector = orig_detector
-        else:
-            result = pipeline.answer_question(
-                query=request.query,
-                strategy=request.strategy,
-                top_k=request.top_k
-            )
+            bypass_refusal = True
+
+        result = pipeline.answer_question(
+            query=request.query,
+            strategy=request.strategy,
+            top_k=request.top_k,
+            bypass_refusal=bypass_refusal
+        )
         logger.info("RAG query processed: strategy=%s top_k=%s refused=%s", request.strategy, request.top_k, result.get("refused"))
         return result
     except HTTPException:

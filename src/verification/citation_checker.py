@@ -100,8 +100,9 @@ class CitationChecker:
             clause = chunk.get("clause")
             if article:
                 key = make_key(article, clause)
-                # Lưu chunk gốc vào index
-                self.corpus_index[key] = chunk
+                if key not in self.corpus_index:
+                    self.corpus_index[key] = []
+                self.corpus_index[key].append(chunk)
 
     def check_citations(self, response: RAGResponse, retrieved_chunks: list[dict]) -> dict:
         """
@@ -132,9 +133,14 @@ class CitationChecker:
         retrieved_keys = set()
         for r_chunk in (retrieved_chunks or []):
             art = r_chunk.get("article")
-            cl = r_chunk.get("clause")
-            if art:
-                retrieved_keys.add(make_key(art, cl))
+            if "clauses" in r_chunk:
+                for cl in r_chunk["clauses"]:
+                    if art:
+                        retrieved_keys.add(make_key(art, cl))
+            else:
+                cl = r_chunk.get("clause")
+                if art:
+                    retrieved_keys.add(make_key(art, cl))
                 
         # 2. Duyệt qua từng trích dẫn trong danh sách để kiểm định chi tiết
         for cit in citations:
@@ -147,36 +153,38 @@ class CitationChecker:
             cit_key = make_key(article, clause)
             
             # Kiểm tra tồn tại trong CSDL Corpus (hoặc xác minh động nếu không khớp khóa chi tiết)
-            corpus_chunk = self.corpus_index.get(cit_key)
-            if not corpus_chunk:
+            corpus_chunks = self.corpus_index.get(cit_key)
+            if not corpus_chunks:
                 # Nếu không tìm thấy key chi tiết (Điều + Khoản), kiểm tra xem có key của cả Điều luật tổng quát không
                 fallback_key = (cit_key[0], "")
-                parent_chunk = self.corpus_index.get(fallback_key)
+                parent_chunks = self.corpus_index.get(fallback_key)
                 
-                if parent_chunk:
+                if parent_chunks:
                     # Thực hiện Xác minh động (Dynamic Verification)
                     clause_num = cit_key[1]
                     if clause_num:
-                        text = parent_chunk.get("text", "")
-                        text_lower = text.lower()
-                        # Regex tìm kiếm chỉ số Khoản ở đầu dòng, sau dấu xuống dòng hoặc có chữ "khoản X"
                         clause_pattern = rf'(?:^\s*{clause_num}\b|\n\s*{clause_num}\b|khoản\s*{clause_num}\b|khoan\s*{clause_num}\b)'
+                        valid_parent_chunks = []
+                        for p_chunk in parent_chunks:
+                            text = p_chunk.get("text", "")
+                            text_lower = text.lower()
+                            if re.search(clause_pattern, text_lower):
+                                valid_parent_chunks.append(p_chunk)
                         
-                        if not re.search(clause_pattern, text_lower):
-                            # Nếu không tìm thấy chỉ số Khoản trong văn bản gốc của Điều luật
+                        if not valid_parent_chunks:
                             cit_errors.append("citation_not_found_in_corpus")
                         else:
-                            # Nếu tìm thấy, coi như hợp lệ và gán chunk cha làm corpus_chunk để đối chiếu tiếp
-                            corpus_chunk = parent_chunk
+                            # Nếu tìm thấy, coi như hợp lệ và gán chunk cha làm corpus_chunks để đối chiếu tiếp
+                            corpus_chunks = valid_parent_chunks
                     else:
                         # LLM trích dẫn cả Điều và Điều có tồn tại trong CSDL
-                        corpus_chunk = parent_chunk
+                        corpus_chunks = parent_chunks
                 else:
                     # Cả Điều luật cũng không tồn tại trong CSDL
                     cit_errors.append("citation_not_found_in_corpus")
             
             # Nếu đã tìm thấy hoặc xác minh động thành công
-            if corpus_chunk:
+            if corpus_chunks:
                 # Kiểm tra xem Điều luật có nằm trong Context được truy hồi không (đối chiếu an toàn, bao dung)
                 art_key = make_key(article, None)[0]
                 context_has_art = any(k[0] == art_key for k in retrieved_keys)
@@ -185,8 +193,13 @@ class CitationChecker:
                     
                 # Kiểm tra tính chuẩn xác của chuỗi bằng chứng (Evidence check)
                 evidence_clean = " ".join(evidence.lower().split())
-                text_clean = " ".join(corpus_chunk.get("text", "").lower().split())
-                if evidence_clean not in text_clean:
+                evidence_found = False
+                for chunk in corpus_chunks:
+                    text_clean = " ".join(chunk.get("text", "").lower().split())
+                    if evidence_clean in text_clean:
+                        evidence_found = True
+                        break
+                if not evidence_found:
                     cit_errors.append("fabricated_evidence")
                     
             if cit_errors:

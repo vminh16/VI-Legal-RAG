@@ -49,10 +49,16 @@ class ContextBuilder:
                     if text not in existing_chunk["text"]:
                         # Nối thêm phần văn bản mới bằng nhãn phân tách
                         existing_chunk["text"] += "\n[Đoạn tiếp theo]:\n" + text
+                        
+                    # Lưu thêm clause phụ và chunk_id phụ
+                    existing_chunk["clauses"].add(chunk.get("clause"))
+                    existing_chunk["chunk_ids"].add(chunk.get("chunk_id"))
                     continue
 
             # Nếu chưa từng xuất hiện hoặc không có thông tin Điều luật, tạo mới phần tử
             chunk_copy = dict(chunk)
+            chunk_copy["clauses"] = {chunk.get("clause")}
+            chunk_copy["chunk_ids"] = {chunk.get("chunk_id")}
             merged_chunks.append(chunk_copy)
             if article:
                 seen_articles[article.strip()] = len(merged_chunks) - 1

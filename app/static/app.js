@@ -1,5 +1,15 @@
 // ViLaborRAG Premium Frontend Logic (app.js)
 
+// Tự động trích xuất token truy cập từ URL parameter nếu có (BUG-06)
+const urlParams = new URLSearchParams(window.location.search);
+const urlToken = urlParams.get('token');
+if (urlToken) {
+    localStorage.setItem('api_auth_token', urlToken);
+    // Làm sạch thanh địa chỉ của trình duyệt
+    const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+    window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
+}
+
 // State management
 let currentResponse = null;
 let requestStartTime = null;
@@ -213,13 +223,20 @@ async function submitQuery() {
         bypass_refusal: bypassRefusalCheckbox.checked
     };
     
+    // Gửi kèm Bearer token nếu có trong cấu hình (BUG-06)
+    const headers = {
+        'Content-Type': 'application/json'
+    };
+    const apiToken = localStorage.getItem('api_auth_token');
+    if (apiToken) {
+        headers['Authorization'] = `Bearer ${apiToken}`;
+    }
+    
     try {
         requestStartTime = performance.now();
         const response = await fetch('/api/v1/query', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: headers,
             body: JSON.stringify(payload)
         });
         
@@ -370,14 +387,17 @@ function renderBotResponse(id, data) {
                 citationsContainer.className = 'citations-container';
                 
                 data.citations.forEach(cit => {
+                    const citId = parseInt(cit.citation_id, 10);
+                    if (isNaN(citId)) return; // Bảo vệ an toàn chống XSS qua ID (BUG-12)
+                    
                     const card = document.createElement('div');
                     card.className = 'citation-card';
-                    card.id = `cit-card-${cit.citation_id}`;
+                    card.id = `cit-card-${citId}`;
                     
                     const header = document.createElement('div');
                     header.className = 'citation-card-header';
                     header.innerHTML = `
-                        <span>[${escapeHtml(cit.citation_id)}] ${escapeHtml(cit.article || '')} ${cit.clause ? `- ${escapeHtml(cit.clause)}` : ''}</span>
+                        <span>[${citId}] ${escapeHtml(cit.article || '')} ${cit.clause ? `- ${escapeHtml(cit.clause)}` : ''}</span>
                         <span class="citation-tag">${escapeHtml(cit.title || '')}</span>
                     `;
                     
@@ -463,17 +483,20 @@ function safeExternalUrl(value) {
 // Format markdown citations in text e.g. [1] or [2] into clickable tags
 function formatAnswerText(text) {
     if (!text) return '';
+    
+    // CẢNH BÁO BẢO MẬT: Bắt buộc thực hiện escapeHtml đầu tiên trước khi chèn bất kỳ thẻ HTML nào (BUG-05)
     let escaped = escapeHtml(text);
     
-    // Replace markdown-style bold tags **bold**
+    // Thay thế markdown bold ** bằng thẻ <strong> (An toàn vì nội dung bên trong đã được escapeHtml)
     escaped = escaped.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
     
-    // Replace newline symbols with <br>
+    // Thay thế xuống dòng bằng <br>
     escaped = escaped.replace(/\n/g, '<br>');
 
-    // Replace [1], [2], etc. with styled span cite-tags
+    // Thay thế [1], [2], v.v. bằng thẻ chi tiết (An toàn vì chỉ khớp số nguyên)
     return escaped.replace(/\[(\d+)\]/g, (match, num) => {
-        return `<span class="cite-tag" data-cit-id="${num}">[${num}]</span>`;
+        const citId = parseInt(num, 10);
+        return `<span class="cite-tag" data-cit-id="${citId}">[${citId}]</span>`;
     });
 }
 

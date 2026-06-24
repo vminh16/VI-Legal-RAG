@@ -37,7 +37,7 @@ class RAGPipeline:
         self.faithfulness_checker = faithfulness_checker if faithfulness_checker is not None else FaithfulnessChecker(api_key=api_key)
         self.refusal_detector = refusal_detector if refusal_detector is not None else RefusalDetector(api_key=api_key)
 
-    def answer_question(self, query: str, strategy: str = "hybrid_rerank", top_k: int = 5) -> dict:
+    def answer_question(self, query: str, strategy: str = "hybrid_rerank", top_k: int = 5, bypass_refusal: bool = False) -> dict:
         """
         Orchestrator trung tâm xử lý trọn vẹn luồng RAG 3 Tầng Từ chối Lai (Option C):
         
@@ -60,10 +60,16 @@ class RAGPipeline:
                 "retrieved_chunks": []
             }
 
+        # Thiết lập bộ kiểm tra từ chối (hỗ trợ bypass không gây race condition)
+        detector = self.refusal_detector
+        if bypass_refusal:
+            from src.verification.refusal_detector import BypassRefusalDetector
+            detector = BypassRefusalDetector()
+
         # ---------------------------------------------------------------------
         # TẦNG 1 REFUSAL: TIỀN KIỂM Ý ĐỊNH CÂU HỎI
         # ---------------------------------------------------------------------
-        intent = self.refusal_detector.detect_query_refusal(query)
+        intent = detector.detect_query_refusal(query)
         if intent.refuse:
             logger.info(f"Từ chối Tầng 1 (Query Intent) câu hỏi: '{query}'. Lý do: {intent.reason}")
             return {
@@ -83,7 +89,7 @@ class RAGPipeline:
         # ---------------------------------------------------------------------
         # TẦNG 2 REFUSAL: TRUNG KIỂM ĐIỂM SỐ TƯƠNG ĐỒNG TOP-1
         # ---------------------------------------------------------------------
-        ret_refusal = self.refusal_detector.detect_retrieval_refusal(retrieved_chunks, strategy=strategy)
+        ret_refusal = detector.detect_retrieval_refusal(retrieved_chunks, strategy=strategy)
         if ret_refusal["refuse"]:
             logger.info(f"Từ chối Tầng 2 (Retrieval Score) câu hỏi: '{query}'. Lý do: {ret_refusal['reason']}")
             return {
@@ -108,7 +114,7 @@ class RAGPipeline:
         # ---------------------------------------------------------------------
         # TẦNG 3 REFUSAL (PART 1): KIỂM TRA GENERATOR KHÔNG TỰ TIN
         # ---------------------------------------------------------------------
-        unconfident_refusal = self.refusal_detector.detect_output_refusal(response, {"is_valid": True, "errors": []})
+        unconfident_refusal = detector.detect_output_refusal(response, {"is_valid": True, "errors": []})
         if unconfident_refusal["refuse"]:
             logger.info(f"Từ chối Tầng 3 (Unconfident Generation) câu hỏi: '{query}'.")
             return {
@@ -147,7 +153,7 @@ class RAGPipeline:
         # ---------------------------------------------------------------------
         # TẦNG 3 REFUSAL (PART 2): HẬU KIỂM LAI OPTION C (Từ chối khi Checker lỗi nặng)
         # ---------------------------------------------------------------------
-        final_refusal = self.refusal_detector.detect_output_refusal(response, unified_report)
+        final_refusal = detector.detect_output_refusal(response, unified_report)
         if final_refusal["refuse"]:
             logger.warning(f"Từ chối Tầng 3 (Critical Validation Errors) câu hỏi: '{query}'. Lỗi phát hiện: {unified_report['errors']}")
             return {
